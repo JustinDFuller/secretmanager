@@ -32,10 +32,14 @@ func ParseWithProject(project string, c interface{}) error {
 // ParseWithContextAndProject is the same as Parse, except you can pass in context and project.
 func ParseWithContextAndProject(ctx context.Context, project string, c interface{}) error {
 	t := reflect.TypeOf(c)
-	v := reflect.ValueOf(&c)
+	v := reflect.ValueOf(c)
 	e := v.Elem()
 
-	if e.Kind() != reflect.Struct {
+	if t.Kind() != reflect.Ptr {
+		return fmt.Errorf("expected a pointer to a struct, got: %s", t.Kind())
+	}
+
+	if t.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("expected kind Struct, got %s", e.Kind())
 	}
 
