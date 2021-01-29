@@ -42,7 +42,7 @@ func ParseWithContextAndProject(ctx context.Context, project string, c interface
 	}
 
 	e := reflect.ValueOf(c).Elem()
-	for i := 0; i < t.NumField(); i++ {
+	for i := 0; i < e.NumField(); i++ {
 		tag := t.Field(i).Tag.Get("secretmanager")
 		if tag == "" {
 			continue
