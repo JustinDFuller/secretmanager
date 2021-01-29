@@ -32,15 +32,8 @@ func ParseWithProject(project string, c interface{}) error {
 // ParseWithContextAndProject is the same as Parse, except you can pass in context and project.
 func ParseWithContextAndProject(ctx context.Context, project string, c interface{}) error {
 	t := reflect.TypeOf(c)
-	v := reflect.ValueOf(c)
-	e := v.Elem()
-
-	if t.Kind() != reflect.Ptr {
-		return fmt.Errorf("expected a pointer to a struct, got: %s", t.Kind())
-	}
-
-	if t.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf("expected kind Struct, got %s", e.Kind())
+	if err := validate(t); err != nil {
+		return err
 	}
 
 	client, err := secretmanager.NewClient(ctx)
@@ -48,6 +41,7 @@ func ParseWithContextAndProject(ctx context.Context, project string, c interface
 		return fmt.Errorf("failed to create secretmanager client: %v", err)
 	}
 
+	e := reflect.ValueOf(c).Elem()
 	for i := 0; i < t.NumField(); i++ {
 		tag := t.Field(i).Tag.Get("secretmanager")
 		if tag == "" {
@@ -55,14 +49,8 @@ func ParseWithContextAndProject(ctx context.Context, project string, c interface
 		}
 
 		f := e.FieldByName(t.Field(i).Name)
-		if !f.IsValid() {
-			return fmt.Errorf("field is invalid: %s", tag)
-		}
-		if !f.CanSet() {
-			return fmt.Errorf("cannot set field: %s", tag)
-		}
-		if f.Kind() != reflect.String {
-			return fmt.Errorf("secretmanager tags must only be assigned to strings: %s", tag)
+		if err := validateProp(f); err != nil {
+			return fmt.Errorf("invalid field: %v", err)
 		}
 
 		version := t.Field(i).Tag.Get("version")
@@ -83,5 +71,32 @@ func ParseWithContextAndProject(ctx context.Context, project string, c interface
 		f.SetString(string(result.Payload.Data))
 	}
 
+	return nil
+}
+
+func validate(c interface{}) error {
+	t := reflect.TypeOf(c)
+
+	if t.Kind() != reflect.Ptr {
+		return fmt.Errorf("expected a pointer to a struct, got: %s", t.Kind())
+	}
+
+	if t.Elem().Kind() != reflect.Struct {
+		return fmt.Errorf("expected kind Struct, got %s", t.Kind())
+	}
+
+	return nil
+}
+
+func validateProp(f reflect.Value) error {
+	if !f.IsValid() {
+		return fmt.Errorf("field is invalid: %s", f)
+	}
+	if !f.CanSet() {
+		return fmt.Errorf("cannot set field: %s", f)
+	}
+	if f.Kind() != reflect.String {
+		return fmt.Errorf("secretmanager tags must only be assigned to strings: %s", f)
+	}
 	return nil
 }
