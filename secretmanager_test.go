@@ -39,3 +39,31 @@ func TestValidate(t *testing.T) {
 		t.Fatal("Wanted err, got nil")
 	}
 }
+
+func TestGetType(t *testing.T) {
+	var ts testStruct
+	if ty := getType(ts); ty.Kind() != reflect.Struct {
+		t.Fatalf("Wanted struct, got %s", ty.Kind())
+	}
+	if ty := getType(&ts); ty.Kind() != reflect.Struct {
+		t.Fatalf("Wanted struct, got %s", ty.Kind())
+	}
+	ptr := &ts
+	if ty := getType(&ptr); ty.Kind() != reflect.Struct {
+		t.Fatalf("Wanted struct, got %s", ty.Kind())
+	}
+}
+
+func TestGetValue(t *testing.T) {
+	var ts testStruct
+	if v := getValue(ts); v.Kind() != reflect.Struct {
+		t.Fatalf("Wanted struct, got %s", v.Kind())
+	}
+	if v := getValue(&ts); v.Kind() != reflect.Struct {
+		t.Fatalf("Wanted struct, got %s", v.Kind())
+	}
+	ptr := &ts
+	if v := getValue(&ptr); v.Kind() != reflect.Struct {
+		t.Fatalf("Wanted struct, got %s", v.Kind())
+	}
+}

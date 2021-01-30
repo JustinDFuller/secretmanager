@@ -31,7 +31,7 @@ func ParseWithProject(project string, c interface{}) error {
 
 // ParseWithContextAndProject is the same as Parse, except you can pass in context and project.
 func ParseWithContextAndProject(ctx context.Context, project string, c interface{}) error {
-	t := reflect.TypeOf(c)
+	t := getType(c)
 	if err := validate(t); err != nil {
 		return err
 	}
@@ -41,14 +41,14 @@ func ParseWithContextAndProject(ctx context.Context, project string, c interface
 		return fmt.Errorf("failed to create secretmanager client: %v", err)
 	}
 
-	e := reflect.ValueOf(c).Elem()
-	for i := 0; i < e.NumField(); i++ {
+	v := getValue(c)
+	for i := 0; i < v.NumField(); i++ {
 		tag := t.Field(i).Tag.Get("secretmanager")
 		if tag == "" {
 			continue
 		}
 
-		f := e.FieldByName(t.Field(i).Name)
+		f := v.FieldByName(t.Field(i).Name)
 		if err := validateProp(f); err != nil {
 			return fmt.Errorf("invalid field: %v", err)
 		}
@@ -99,4 +99,20 @@ func validateProp(f reflect.Value) error {
 		return fmt.Errorf("secretmanager tags must only be assigned to strings: %s", f)
 	}
 	return nil
+}
+
+func getType(c interface{}) reflect.Type {
+	t := reflect.TypeOf(c)
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t
+}
+
+func getValue(c interface{}) reflect.Value {
+	v := reflect.ValueOf(c)
+	for v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	return v
 }
