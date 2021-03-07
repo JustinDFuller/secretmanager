@@ -2,6 +2,7 @@ package secretmanager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -31,6 +32,10 @@ func ParseWithProject(project string, c interface{}) error {
 
 // ParseWithContextAndProject is the same as Parse, except you can pass in context and project.
 func ParseWithContextAndProject(ctx context.Context, project string, c interface{}) error {
+	if project == "" {
+		return errors.New("failed to fetch secrets: missing google cloud project")
+	}
+
 	t := getType(c)
 	if err := validate(t); err != nil {
 		return err
