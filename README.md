@@ -1,4 +1,4 @@
-# secretmanager
+<img src="https://repository-images.githubusercontent.com/334135434/5f7aee3e-be95-4075-9d29-d4148634143b" />
 
 Golang library for managing configuration data from [Google Cloud's Secret Manager](https://cloud.google.com/solutions/secrets-management).
 
